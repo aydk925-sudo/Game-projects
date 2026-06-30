@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>GAME VAULT</title>
+<style>
+  :root{
+    --bg:#0d100a;
+    --panel:#171b12;
+    --amber:#f0a830;
+    --red:#e6483c;
+    --olive:#7a8a4e;
+    --paper:#d8d2b8;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{
+    height:100%;
+    background:radial-gradient(ellipse at center, #1b2014 0%, #0a0c07 75%);
+    color:var(--paper);
+    font-family:'Courier New',monospace;
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+  }
+  #wrap{
+    position:relative;
+    width:min(94vw, 430px);
+    aspect-ratio:210/360;
+    box-shadow:0 0 0 3px #000, 0 0 0 6px #3a3422, 0 10px 40px rgba(0,0,0,.7);
+    border-radius:4px;
+    overflow:hidden;
+    background:#000;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+    padding:18px 14px;
+    gap:10px;
+  }
+
+  /* scanline overlay */
+  #wrap::before{
+    content:'';
+    position:absolute; inset:0; pointer-events:none; z-index:10;
+    background:repeating-linear-gradient(
+      to bottom,
+      transparent 0px, transparent 3px,
+      rgba(0,0,0,.12) 3px, rgba(0,0,0,.12) 4px
+    );
+  }
+
+  .vault-title{
+    font-size:26px; font-weight:bold; color:var(--amber);
+    letter-spacing:5px; text-transform:uppercase;
+    text-shadow:2px 2px 0 #5a2010, 0 0 18px rgba(240,168,48,.4);
+    margin-top:6px;
+  }
+  .vault-sub{
+    font-size:8px; color:var(--olive); letter-spacing:3px;
+    text-transform:uppercase; margin-top:-6px;
+  }
+
+  .divider{
+    width:100%; height:1px;
+    background:linear-gradient(to right, transparent, #4a4a32, transparent);
+  }
+
+  .game-list{
+    width:100%;
+    display:flex; flex-direction:column; gap:8px;
+    overflow-y:auto;
+    flex:1;
+    padding-right:2px;
+  }
+  .game-list::-webkit-scrollbar{ width:3px; }
+  .game-list::-webkit-scrollbar-track{ background:transparent; }
+  .game-list::-webkit-scrollbar-thumb{ background:#4a4a32; }
+
+  .game-card{
+    width:100%;
+    display:flex; align-items:center; gap:10px;
+    background:rgba(10,12,7,.6);
+    border:1px solid #3a3a22;
+    padding:9px 11px;
+    cursor:pointer;
+    text-decoration:none;
+    color:inherit;
+    transition:border-color .15s, background .15s;
+    position:relative;
+    overflow:hidden;
+  }
+  .game-card::after{
+    content:'';
+    position:absolute; inset:0;
+    background:linear-gradient(120deg, transparent 60%, rgba(240,168,48,.04));
+    pointer-events:none;
+  }
+  .game-card:hover{
+    border-color:var(--amber);
+    background:rgba(240,168,48,.07);
+  }
+  .game-card:active{ transform:translateY(1px); }
+
+  .game-icon{
+    width:36px; height:36px; flex-shrink:0;
+    border:1px solid #4a4a32;
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px;
+    background:#0d100a;
+  }
+  .game-info{ flex:1; min-width:0; }
+  .game-name{
+    font-size:11px; color:var(--amber); letter-spacing:2px;
+    text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .game-desc{
+    font-size:8px; color:#8a8a6a; letter-spacing:.8px;
+    margin-top:2px; text-transform:uppercase;
+  }
+  .game-tag{
+    font-size:7px; color:var(--olive); border:1px solid #4a4a32;
+    padding:1px 4px; letter-spacing:1px; text-transform:uppercase; white-space:nowrap;
+  }
+
+  .footer{
+    font-size:7px; color:#4a4a32; letter-spacing:2px; text-transform:uppercase;
+    margin-top:auto; padding-top:4px;
+  }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div class="vault-title">GAME VAULT</div>
+  <div class="vault-sub">Select Mission</div>
+
+  <div class="divider"></div>
+
+  <div class="game-list">
+
+    <a class="game-card" href="last_war.html">
+      <div class="game-icon">⚔️</div>
+      <div class="game-info">
+        <div class="game-name">Last War</div>
+        <div class="game-desc">Road Runner · Frontline Shooter</div>
+      </div>
+      <div class="game-tag">Shooter</div>
+    </a>
+
+    <!-- Add new games below this line -->
+
+  </div>
+
+  <div class="divider"></div>
+  <div class="footer">GAME VAULT · aydk925</div>
+</div>
+</body>
+</html>
