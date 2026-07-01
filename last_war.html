@@ -201,7 +201,7 @@
         <div class="shop-item-name">Med Kit</div>
         <div class="shop-item-desc">Restore 1 HP</div>
       </div>
-      <span class="shop-item-cost">3 TKN</span>
+      <span class="shop-item-cost">23 TKN</span>
       <button class="shopbtn" id="shopBuyHeal">Buy</button>
     </div>
     <div class="shop-item">
@@ -209,7 +209,7 @@
         <div class="shop-item-name">Reinforcement</div>
         <div class="shop-item-desc">+1 extra life</div>
       </div>
-      <span class="shop-item-cost">8 TKN</span>
+      <span class="shop-item-cost">150 TKN</span>
       <button class="shopbtn" id="shopBuyLife">Buy</button>
     </div>
     <div class="shop-item">
@@ -217,7 +217,7 @@
         <div class="shop-item-name">Weapon Upgrade</div>
         <div class="shop-item-desc">+1 weapon level</div>
       </div>
-      <span class="shop-item-cost">5 TKN</span>
+      <span class="shop-item-cost">25 TKN</span>
       <button class="shopbtn" id="shopBuyWeapon">Buy</button>
     </div>
     <div class="shop-item">
@@ -225,7 +225,7 @@
         <div class="shop-item-name">Cryo Round</div>
         <div class="shop-item-desc">Next stage at current difficulty</div>
       </div>
-      <span class="shop-item-cost">6 TKN</span>
+      <span class="shop-item-cost">26 TKN</span>
       <button class="shopbtn" id="shopBuyFreeze">Buy</button>
     </div>
     <button class="gamebtn" id="btnShopDone" style="margin-top:4px;">Deploy</button>
@@ -234,7 +234,7 @@
   <div class="overlay hidden" id="gameClearOverlay">
     <div class="title" style="font-size:24px;">GAME CLEAR</div>
     <div class="bigstat">Score: <span id="gameClearScore">0</span></div>
-    <div class="sub">You reached 1,000,000 points.</div>
+    <div class="sub">You reached 100,000 points.</div>
     <button class="gamebtn" id="btnKeepGoing">Keep Going</button>
     <button class="gamebtn" id="btnClearMenu">Go to Menu</button>
   </div>
@@ -709,7 +709,7 @@ function gameOver(){
 function update(dt){
   game.shakeT = Math.max(0, game.shakeT - dt);
   if(game.state !== 'playing') return;
-  if(!game.gameClearShown && game.score >= 1000000){
+  if(!game.gameClearShown && game.score >= 100000){
     triggerGameClear();
     return;
   }
@@ -916,9 +916,17 @@ function hurtPlayer(){
   flashScreen();
   sfxPlayerHit();
   if(game.challengeMode){
-    p.health = 0;
-    p.lives = 0;
-    gameOver();
+    p.health = p.maxHealth;
+    p.lives -= 1;
+    p.invuln = 1.4;
+    if(p.lives > 0){
+      game.state = 'lifelost';
+      document.getElementById('livesLeftNum').textContent = p.lives;
+      show('lifeLostOverlay');
+    } else {
+      p.health = 0;
+      gameOver();
+    }
     updateHud();
     return;
   }
@@ -1108,10 +1116,10 @@ function openShop(){
 
 function refreshShop(){
   document.getElementById('shopTokenNum').textContent = game.tokens;
-  document.getElementById('shopBuyHeal').disabled   = game.tokens < 3 || game.player.health >= game.player.maxHealth;
-  document.getElementById('shopBuyLife').disabled   = game.tokens < 8;
-  document.getElementById('shopBuyWeapon').disabled = game.tokens < 5;
-  document.getElementById('shopBuyFreeze').disabled = game.tokens < 6;
+  document.getElementById('shopBuyHeal').disabled   = game.tokens < 23 || game.player.health >= game.player.maxHealth;
+  document.getElementById('shopBuyLife').disabled   = game.tokens < 150;
+  document.getElementById('shopBuyWeapon').disabled = game.tokens < 25;
+  document.getElementById('shopBuyFreeze').disabled = game.tokens < 26;
 }
 
 function shopBuy(cost, fn){
@@ -1158,10 +1166,10 @@ document.getElementById('lifeLostOverlay').addEventListener('click', ()=>{ game.
 document.getElementById('btnShop').addEventListener('click', openShop);
 document.getElementById('btnContinue').addEventListener('click', nextStage);
 document.getElementById('btnShopDone').addEventListener('click', nextStage);
-document.getElementById('shopBuyHeal').addEventListener('click', ()=>shopBuy(3, ()=>{ game.player.health = Math.min(game.player.maxHealth, game.player.health+1); }));
-document.getElementById('shopBuyLife').addEventListener('click', ()=>shopBuy(8, ()=>{ game.player.lives++; }));
-document.getElementById('shopBuyWeapon').addEventListener('click', ()=>shopBuy(5, ()=>{ grantWeaponLevel(1); }));
-document.getElementById('shopBuyFreeze').addEventListener('click', ()=>shopBuy(6, ()=>{ game.freezeRemaining = (game.freezeRemaining||0)+1; }));
+document.getElementById('shopBuyHeal').addEventListener('click', ()=>shopBuy(23, ()=>{ game.player.health = Math.min(game.player.maxHealth, game.player.health+1); }));
+document.getElementById('shopBuyLife').addEventListener('click', ()=>shopBuy(150, ()=>{ game.player.lives++; }));
+document.getElementById('shopBuyWeapon').addEventListener('click', ()=>shopBuy(25, ()=>{ grantWeaponLevel(1); }));
+document.getElementById('shopBuyFreeze').addEventListener('click', ()=>shopBuy(26, ()=>{ game.freezeRemaining = (game.freezeRemaining||0)+1; }));
 document.getElementById('btnKeepGoing').addEventListener('click', ()=>{ game.state='playing'; hideAllOverlays(); });
 document.getElementById('btnClearMenu').addEventListener('click', goToMenu);
 document.getElementById('btnRestart').addEventListener('click', goToMenu);
