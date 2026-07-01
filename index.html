@@ -8,10 +8,14 @@
   :root{
     --bg:#0d100a;
     --panel:#171b12;
-    --amber:#f0a830;
+    --accent:#f0a830;
+    --accent-dim:rgba(240,168,48,.07);
+    --accent-glow:rgba(240,168,48,.4);
     --red:#e6483c;
     --olive:#7a8a4e;
     --paper:#d8d2b8;
+    --border:#3a3a22;
+    --border-accent:#4a4a32;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   html,body{
@@ -37,8 +41,6 @@
     padding:18px 14px;
     gap:10px;
   }
-
-  /* scanline overlay */
   #wrap::before{
     content:'';
     position:absolute; inset:0; pointer-events:none; z-index:10;
@@ -49,20 +51,51 @@
     );
   }
 
-  .vault-title{
-    font-size:26px; font-weight:bold; color:var(--amber);
-    letter-spacing:5px; text-transform:uppercase;
-    text-shadow:2px 2px 0 #5a2010, 0 0 18px rgba(240,168,48,.4);
+  .vault-header{
+    width:100%; display:flex; align-items:flex-start; justify-content:space-between;
     margin-top:6px;
+  }
+  .vault-title-block{ display:flex; flex-direction:column; gap:3px; }
+  .vault-title{
+    font-size:26px; font-weight:bold; color:var(--accent);
+    letter-spacing:5px; text-transform:uppercase;
+    text-shadow:2px 2px 0 #5a2010, 0 0 18px var(--accent-glow);
   }
   .vault-sub{
     font-size:8px; color:var(--olive); letter-spacing:3px;
-    text-transform:uppercase; margin-top:-6px;
+    text-transform:uppercase;
   }
+
+  /* theme button */
+  #btnTheme{
+    background:rgba(10,12,7,.6); border:1px solid var(--border-accent);
+    color:var(--accent); font-family:inherit; font-size:14px;
+    width:26px; height:26px; cursor:pointer; display:flex;
+    align-items:center; justify-content:center; flex-shrink:0;
+  }
+  #btnTheme:active{ transform:translateY(1px); }
+
+  /* theme panel */
+  #themePanel{
+    position:absolute; top:50px; right:14px; z-index:20;
+    background:#0d100a; border:1px solid var(--border-accent);
+    padding:8px; display:flex; flex-direction:column; gap:6px;
+    min-width:130px;
+  }
+  #themePanel.hidden{ display:none; }
+  .theme-label{ font-size:7px; color:#6a6a4a; letter-spacing:2px; text-transform:uppercase; margin-bottom:2px; }
+  .theme-row{ display:flex; gap:5px; }
+  .theme-swatch{
+    width:22px; height:22px; border:2px solid transparent; cursor:pointer;
+    transition:border-color .1s;
+  }
+  .theme-swatch.active{ border-color:var(--paper); }
+  .theme-swatch:hover{ border-color:var(--accent); }
+  .theme-name{ font-size:8px; color:var(--paper); letter-spacing:1px; text-transform:uppercase; align-self:center; }
 
   .divider{
     width:100%; height:1px;
-    background:linear-gradient(to right, transparent, #4a4a32, transparent);
+    background:linear-gradient(to right, transparent, var(--border-accent), transparent);
   }
 
   .game-list{
@@ -74,13 +107,13 @@
   }
   .game-list::-webkit-scrollbar{ width:3px; }
   .game-list::-webkit-scrollbar-track{ background:transparent; }
-  .game-list::-webkit-scrollbar-thumb{ background:#4a4a32; }
+  .game-list::-webkit-scrollbar-thumb{ background:var(--border-accent); }
 
   .game-card{
     width:100%;
     display:flex; align-items:center; gap:10px;
     background:rgba(10,12,7,.6);
-    border:1px solid #3a3a22;
+    border:1px solid var(--border);
     padding:9px 11px;
     cursor:pointer;
     text-decoration:none;
@@ -92,25 +125,22 @@
   .game-card::after{
     content:'';
     position:absolute; inset:0;
-    background:linear-gradient(120deg, transparent 60%, rgba(240,168,48,.04));
+    background:linear-gradient(120deg, transparent 60%, var(--accent-dim));
     pointer-events:none;
   }
-  .game-card:hover{
-    border-color:var(--amber);
-    background:rgba(240,168,48,.07);
-  }
+  .game-card:hover{ border-color:var(--accent); background:var(--accent-dim); }
   .game-card:active{ transform:translateY(1px); }
 
   .game-icon{
     width:36px; height:36px; flex-shrink:0;
-    border:1px solid #4a4a32;
+    border:1px solid var(--border-accent);
     display:flex; align-items:center; justify-content:center;
     font-size:18px;
     background:#0d100a;
   }
   .game-info{ flex:1; min-width:0; }
   .game-name{
-    font-size:11px; color:var(--amber); letter-spacing:2px;
+    font-size:11px; color:var(--accent); letter-spacing:2px;
     text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
   .game-desc{
@@ -118,7 +148,7 @@
     margin-top:2px; text-transform:uppercase;
   }
   .game-tag{
-    font-size:7px; color:var(--olive); border:1px solid #4a4a32;
+    font-size:7px; color:var(--olive); border:1px solid var(--border-accent);
     padding:1px 4px; letter-spacing:1px; text-transform:uppercase; white-space:nowrap;
   }
 
@@ -130,8 +160,37 @@
 </head>
 <body>
 <div id="wrap">
-  <div class="vault-title">GAME VAULT</div>
-  <div class="vault-sub">Select Mission</div>
+
+  <div class="vault-header">
+    <div class="vault-title-block">
+      <div class="vault-title">GAME VAULT</div>
+      <div class="vault-sub">Select Mission</div>
+    </div>
+    <button id="btnTheme" title="Theme">◈</button>
+  </div>
+
+  <!-- theme panel -->
+  <div id="themePanel" class="hidden">
+    <div class="theme-label">UI Theme</div>
+    <div style="display:flex; flex-direction:column; gap:5px;">
+      <div class="theme-row" data-theme="amber">
+        <div class="theme-swatch" style="background:#f0a830;"></div>
+        <span class="theme-name">Amber</span>
+      </div>
+      <div class="theme-row" data-theme="cyber">
+        <div class="theme-swatch" style="background:#00e5ff;"></div>
+        <span class="theme-name">Cyber</span>
+      </div>
+      <div class="theme-row" data-theme="blood">
+        <div class="theme-swatch" style="background:#e6483c;"></div>
+        <span class="theme-name">Blood</span>
+      </div>
+      <div class="theme-row" data-theme="arctic">
+        <div class="theme-swatch" style="background:#a8d8ea;"></div>
+        <span class="theme-name">Arctic</span>
+      </div>
+    </div>
+  </div>
 
   <div class="divider"></div>
 
@@ -153,5 +212,72 @@
   <div class="divider"></div>
   <div class="footer">GAME VAULT · aydk925</div>
 </div>
+
+<script>
+const THEMES = {
+  amber: {
+    '--accent':       '#f0a830',
+    '--accent-dim':   'rgba(240,168,48,.07)',
+    '--accent-glow':  'rgba(240,168,48,.4)',
+    '--border':       '#3a3a22',
+    '--border-accent':'#4a4a32',
+    '--olive':        '#7a8a4e',
+  },
+  cyber: {
+    '--accent':       '#00e5ff',
+    '--accent-dim':   'rgba(0,229,255,.07)',
+    '--accent-glow':  'rgba(0,229,255,.35)',
+    '--border':       '#1a3a3a',
+    '--border-accent':'#1e5050',
+    '--olive':        '#4a8a8a',
+  },
+  blood: {
+    '--accent':       '#e6483c',
+    '--accent-dim':   'rgba(230,72,60,.07)',
+    '--accent-glow':  'rgba(230,72,60,.4)',
+    '--border':       '#3a1a1a',
+    '--border-accent':'#5a2020',
+    '--olive':        '#8a4a4a',
+  },
+  arctic: {
+    '--accent':       '#a8d8ea',
+    '--accent-dim':   'rgba(168,216,234,.07)',
+    '--accent-glow':  'rgba(168,216,234,.3)',
+    '--border':       '#1a2a3a',
+    '--border-accent':'#2a3a4a',
+    '--olive':        '#6a8a9a',
+  },
+};
+
+function applyTheme(name){
+  const t = THEMES[name] || THEMES.amber;
+  const root = document.documentElement;
+  for(const [k,v] of Object.entries(t)) root.style.setProperty(k, v);
+  document.querySelectorAll('.theme-row').forEach(r=>{
+    r.querySelector('.theme-swatch').classList.toggle('active', r.dataset.theme === name);
+  });
+  localStorage.setItem('vault-theme', name);
+}
+
+const saved = localStorage.getItem('vault-theme') || 'amber';
+applyTheme(saved);
+
+const btnTheme = document.getElementById('btnTheme');
+const panel    = document.getElementById('themePanel');
+
+btnTheme.addEventListener('click', e=>{
+  e.stopPropagation();
+  panel.classList.toggle('hidden');
+});
+
+document.querySelectorAll('.theme-row').forEach(r=>{
+  r.addEventListener('click', ()=>{
+    applyTheme(r.dataset.theme);
+    panel.classList.add('hidden');
+  });
+});
+
+document.addEventListener('click', ()=> panel.classList.add('hidden'));
+</script>
 </body>
 </html>

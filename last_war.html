@@ -100,6 +100,16 @@
   }
   .flash{position:absolute; inset:0; background:#e6483c; opacity:0; pointer-events:none;}
 
+  /* color picker */
+  .color-pick-row{ display:flex; gap:7px; align-items:center; margin-top:4px; }
+  .color-swatch{
+    width:20px; height:20px; border:2px solid transparent; cursor:pointer;
+    transition:border-color .1s; border-radius:1px;
+  }
+  .color-swatch.active{ border-color:var(--paper); }
+  .color-swatch:hover{ border-color:var(--amber); }
+  .color-pick-label{ font-size:8px; color:#8a8a6a; letter-spacing:1px; text-transform:uppercase; }
+
   /* shop */
   #shopOverlay{ gap:6px; }
   .shop-title{ font-size:18px; color:var(--amber); letter-spacing:3px; text-transform:uppercase; margin-bottom:2px; }
@@ -151,6 +161,14 @@
     <div id="instructions">
       Drag / arrow keys / A-D to move.<br>
       Auto-fires at the nearest target — hold right click to fire straight ahead only.
+    </div>
+    <div class="color-pick-label">Player Color</div>
+    <div class="color-pick-row" id="colorPicker">
+      <div class="color-swatch" data-color="olive"  style="background:#7c8a52;" title="Olive"></div>
+      <div class="color-swatch" data-color="desert" style="background:#b8925a;" title="Desert"></div>
+      <div class="color-swatch" data-color="navy"   style="background:#3a5a8a;" title="Navy"></div>
+      <div class="color-swatch" data-color="red"    style="background:#8a2a2a;" title="Red"></div>
+      <div class="color-swatch" data-color="ghost"  style="background:#9a9a9a;" title="Ghost"></div>
     </div>
     <button class="gamebtn" id="btnStart">Deploy</button>
   </div>
@@ -348,7 +366,14 @@ const SOLDIER_PATTERN = [
 "..LL.LL..",
 ".LLL.LLL."
 ];
-const PLAYER_PAL = { H:'#56612f', B:'#7c8a52', G:'#2a2a28', L:'#33391f' };
+const PLAYER_PALETTES = {
+  olive:  { H:'#56612f', B:'#7c8a52', G:'#2a2a28', L:'#33391f' },
+  desert: { H:'#8a6030', B:'#b8925a', G:'#2a2420', L:'#5a3c1a' },
+  navy:   { H:'#1e3a5a', B:'#3a5a8a', G:'#1a1a28', L:'#1a2a40' },
+  red:    { H:'#5a1a1a', B:'#8a2a2a', G:'#221818', L:'#3a1010' },
+  ghost:  { H:'#6a6a6a', B:'#9a9a9a', G:'#282828', L:'#484848' },
+};
+let PLAYER_PAL = PLAYER_PALETTES[localStorage.getItem('lw-color') || 'olive'];
 const ENEMY_PAL  = { H:'#7a2620', B:'#5c2a22', G:'#1c1c1a', L:'#2a1614' };
 const ALLY_PAL   = { H:'#235068', B:'#2f6d57', G:'#1c1c1a', L:'#1c3326' };
 
@@ -1110,6 +1135,21 @@ function goToMenu(){
   document.getElementById('challengeTag').style.display = game && game.challengeMode ? 'inline-block' : 'none';
   if(game) game.state = 'menu';
 }
+
+// color picker
+(function(){
+  const saved = localStorage.getItem('lw-color') || 'olive';
+  document.querySelectorAll('#colorPicker .color-swatch').forEach(sw=>{
+    if(sw.dataset.color === saved) sw.classList.add('active');
+    sw.addEventListener('click', ()=>{
+      document.querySelectorAll('#colorPicker .color-swatch').forEach(s=>s.classList.remove('active'));
+      sw.classList.add('active');
+      const key = sw.dataset.color;
+      localStorage.setItem('lw-color', key);
+      PLAYER_PAL = PLAYER_PALETTES[key];
+    });
+  });
+})();
 
 document.getElementById('btnStart').addEventListener('click', startGame);
 document.getElementById('btnResume').addEventListener('click', ()=>{ game.state='playing'; hideAllOverlays(); });
