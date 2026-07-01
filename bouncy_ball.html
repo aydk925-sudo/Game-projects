@@ -264,9 +264,9 @@ function genPlatform(y){
   const roll=Math.random()*100;
   let type='normal';
   if(roll<2) type='spike';
-  else if(roll<7) type='spring';
-  else if(roll<17) type='breakable';
-  else if(roll<27) type='moving';
+  else if(roll<4) type='spring';
+  else if(roll<14) type='breakable';
+  else if(roll<24) type='moving';
 
   const w = type==='spike' ? 30 : 40+Math.random()*30;
   const x = Math.random()*(W-w);
@@ -317,7 +317,7 @@ function updatePlay(dt){
   const highestPlatY = platforms.length ? Math.min(...platforms.map(p=>p.y)) : 0;
   if(highestPlatY > topNeeded){
     genPlatform(highestPlatY - 28 - Math.random()*20);
-    if(Math.random()<0.15) spawnEnemy(highestPlatY - 50);
+    if(Math.random()<0.06) spawnEnemy(highestPlatY - 50);
     if(Math.random()<0.08){
       coins.push({ x: Math.random()*(W-10)+5, y: highestPlatY-40, collected:false });
     }
@@ -460,6 +460,11 @@ function endGame(){
 function draw(){
   ctx.clearRect(0,0,W,H);
 
+  if(state==='menu'||state==='gameover'){
+    drawMenuScene();
+    return;
+  }
+
   const th = THEMES_DEF[equippedTheme];
   th.bg(camY, H);
 
@@ -534,7 +539,7 @@ function draw(){
 function drawPlatform(p, py){
   const th = THEMES_DEF[equippedTheme];
   const col = p.type==='normal'   ? th.pfCol :
-              p.type==='moving'   ? '#80c8f0' :
+              p.type==='moving'   ? '#d090f0' :
               p.type==='breakable'? '#e8c090' :
               p.type==='spring'   ? '#f0e060' :
               /*spike*/             '#e86060';
@@ -633,12 +638,86 @@ function drawEnemy(e, ey){
   }
 }
 
+// ── Menu animation scene ──
+const menuScene = {
+  balls: [
+    { x:50,  y:200, vx:1.2,  vy:-4, skin:'default' },
+    { x:130, y:260, vx:-0.9, vy:-3, skin:'fire'    },
+    { x:170, y:180, vx:0.7,  vy:-5, skin:'star'    },
+  ],
+  plats: [
+    { x:20,  y:280, w:60 },
+    { x:110, y:220, w:55 },
+    { x:60,  y:160, w:50 },
+    { x:140, y:310, w:55 },
+  ],
+  t: 0,
+};
+
+function updateMenuScene(dt){
+  const g=0.3;
+  for(const b of menuScene.balls){
+    b.vy += g;
+    b.x  += b.vx;
+    b.y  += b.vy;
+    if(b.x<BALL_R||b.x>W-BALL_R){ b.vx*=-1; b.x=Math.max(BALL_R,Math.min(W-BALL_R,b.x)); }
+    if(b.y>H+20){ b.y=H+20; b.vy=-6-Math.random()*2; }
+    for(const p of menuScene.plats){
+      if(b.vy>0 && b.x>=p.x && b.x<=p.x+p.w && b.y+BALL_R>=p.y && b.y+BALL_R<=p.y+8+b.vy+2){
+        b.vy = -(5+Math.random()*2);
+      }
+    }
+  }
+  menuScene.t += dt;
+  // slowly drift platforms
+  menuScene.plats.forEach((p,i)=>{ p.x += Math.sin(menuScene.t*0.4+i)*0.3; });
+}
+
+function drawMenuScene(){
+  // sky gradient
+  const grad=ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,'#1a2a4a');
+  grad.addColorStop(1,'#0a1020');
+  ctx.fillStyle=grad;
+  ctx.fillRect(0,0,W,H);
+
+  // stars
+  ctx.fillStyle='rgba(255,255,255,.7)';
+  const stars=[[20,30],[80,15],[140,50],[170,20],[40,80],[110,45],[190,70],[60,110],[155,90]];
+  for(const [sx,sy] of stars){
+    const twinkle=0.4+0.6*Math.abs(Math.sin(menuScene.t*1.5+sx));
+    ctx.globalAlpha=twinkle;
+    ctx.fillRect(sx,sy,1,1);
+  }
+  ctx.globalAlpha=1;
+  ctx.fillStyle='rgba(255,255,255,.7)';
+
+  // floating platforms
+  for(const p of menuScene.plats){
+    ctx.fillStyle='#c8f0d8';
+    ctx.fillRect(p.x,p.y,p.w,6);
+    ctx.fillStyle='rgba(255,255,255,.25)';
+    ctx.fillRect(p.x,p.y,p.w,1);
+  }
+
+  // demo balls
+  for(const b of menuScene.balls){
+    const sk = SKINS[b.skin] || SKINS.default;
+    sk.draw(ctx, b.x, b.y, BALL_R);
+  }
+
+  // subtle scanlines
+  ctx.fillStyle='rgba(0,0,0,.08)';
+  for(let y=0;y<H;y+=4) ctx.fillRect(0,y,W,2);
+}
+
 // ── Game loop ──
 let last=0;
 function loop(ts){
   const dt = Math.min((ts-last)/1000, 0.05);
   last=ts;
   if(state==='play') updatePlay(dt);
+  else if(state==='menu'||state==='gameover') updateMenuScene(dt);
   draw();
   requestAnimationFrame(loop);
 }
