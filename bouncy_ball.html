@@ -537,7 +537,7 @@ function hide(id){document.getElementById(id).classList.add('hidden');}
 function hideAll(){['menuOv','gameoverOv','pauseOv'].forEach(hide);}
 
 function startGame(highJump=false){
-  hide('gameoverOv'); hide('menuOv'); hide('shopOv'); hide('pauseOv');
+  hideAll();
   newGame();
   if(highJump) ball.vy=JUMP_VY*2.2;
   state='play';
