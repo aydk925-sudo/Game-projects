@@ -100,18 +100,6 @@ canvas{width:100%;height:100%;image-rendering:pixelated;display:block;}
 .btn:hover{background:#2a5a3a;}
 .btn-row{display:flex;gap:8px;}
 hr.ov-hr{width:80%;border:none;border-top:1px solid #2a4a3a;}
-.shop-title{font-size:16px;color:#a8f0c8;letter-spacing:4px;}
-.shop-coins-row{font-size:10px;color:#ffd700;letter-spacing:2px;}
-.shop-section{font-size:8px;color:#88aa99;letter-spacing:2px;width:100%;text-align:left;margin-top:6px;}
-.shop-grid{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;width:100%;}
-.shop-item{
-  background:#0a1a12;border:1px solid #2a4a3a;padding:6px;cursor:pointer;
-  display:flex;flex-direction:column;align-items:center;gap:3px;
-  width:70px;font-size:8px;color:#ccc;letter-spacing:1px;text-align:center;
-}
-.shop-item.owned{border-color:#a8f0c8;color:#a8f0c8;}
-.shop-item.equipped{border-color:#ffd700;background:#1a1a00;}
-.shop-item canvas{width:32px;height:32px;image-rendering:pixelated;}
 </style>
 </head>
 <body>
@@ -186,21 +174,10 @@ hr.ov-hr{width:80%;border:none;border-top:1px solid #2a4a3a;}
     <hr class="ov-hr">
     <div class="btn-row">
       <button class="btn" id="btnRetry">RETRY</button>
-      <button class="btn" id="btnGoShop">SHOP</button>
       <button class="btn" id="btnMenu">MENU</button>
     </div>
   </div>
 
-  <!-- Shop -->
-  <div id="shopOv" class="hidden">
-    <div class="shop-title">SHOP</div>
-    <div class="shop-coins-row">🪙 <span id="shopCoins">0</span></div>
-    <div class="shop-section">── BALL SKINS ──</div>
-    <div class="shop-grid" id="skinGrid"></div>
-    <div class="shop-section">── MAP THEMES ──</div>
-    <div class="shop-grid" id="themeGrid"></div>
-    <button class="btn" style="margin-top:6px;" id="btnCloseShop">BACK</button>
-  </div>
 </div>
 
 <script>
@@ -430,19 +407,17 @@ function endGame(){totalCoins+=sessionCoins;saveAll();document.getElementById('g
 // ── Menu scene: one ball on one platform ──
 // Panel height ~45% of canvas = ~162px. Playfield = top 198px. Platform centre ~y=130.
 const menuScene={
-  ball:{x:W/2,y:110,vx:0.8,vy:-3},
+  ball:{x:W/2,y:110,vx:0,vy:-3},
   plat:{x:W/2-30,y:140,w:60},
   t:0,
 };
 function updateMenuScene(dt){
   const b=menuScene.ball;
-  b.vy+=0.32; b.x+=b.vx; b.y+=b.vy;
-  if(b.x<BALL_R||b.x>W-BALL_R){b.vx*=-1;b.x=Math.max(BALL_R,Math.min(W-BALL_R,b.x));}
+  b.vy+=0.32; b.y+=b.vy;
   const p=menuScene.plat;
-  if(b.vy>0&&b.x>=p.x&&b.x<=p.x+p.w&&b.y+BALL_R>=p.y&&b.y+BALL_R<=p.y+8+b.vy+2){
-    b.vy=-(6+Math.random()); SFX.bounce();
+  if(b.vy>0&&b.y+BALL_R>=p.y&&b.y+BALL_R<=p.y+8+b.vy+2){
+    b.vy=-7; SFX.bounce();
   }
-  // keep ball above panel area
   if(b.y>165){b.y=165;b.vy=-7;}
   menuScene.t+=dt;
 }
@@ -559,7 +534,7 @@ wrap.addEventListener('click',e=>{
 // ── Helpers ──
 function show(id){document.getElementById(id).classList.remove('hidden');}
 function hide(id){document.getElementById(id).classList.add('hidden');}
-function hideAll(){['menuOv','gameoverOv','shopOv','pauseOv'].forEach(hide);}
+function hideAll(){['menuOv','gameoverOv','pauseOv'].forEach(hide);}
 
 function startGame(highJump=false){
   hide('gameoverOv'); hide('menuOv'); hide('shopOv'); hide('pauseOv');
@@ -655,7 +630,6 @@ document.getElementById('btnBuyTheme').addEventListener('click',e=>{
 document.getElementById('btnResume').addEventListener('click',()=>togglePause());
 document.getElementById('btnPauseMenu').addEventListener('click',()=>{hideAll();state='menu';updateMenuUI();show('menuOv');});
 document.getElementById('btnRetry').addEventListener('click',()=>startGame(false));
-document.getElementById('btnGoShop').addEventListener('click',()=>{hide('gameoverOv');openShop('gameover');});
 document.getElementById('btnMenu').addEventListener('click',()=>{hideAll();state='menu';updateMenuUI();show('menuOv');});
 
 function updateMenuUI(){
@@ -666,51 +640,6 @@ function updateMenuUI(){
   renderSkinPicker(); renderThemePicker();
 }
 
-// ── Shop ──
-let _shopFrom='menu';
-function openShop(from){
-  _shopFrom=from;
-  document.getElementById('shopCoins').textContent=totalCoins;
-  buildShopSkins();buildShopThemes();show('shopOv');
-}
-function buildShopSkins(){
-  const grid=document.getElementById('skinGrid');grid.innerHTML='';
-  Object.entries(SKINS).forEach(([id,sk])=>{
-    const owned=ownedSkins.includes(id),eq=equippedSkin===id;
-    const div=document.createElement('div');div.className='shop-item'+(owned?' owned':'')+(eq?' equipped':'');
-    const c=document.createElement('canvas');c.width=32;c.height=32;sk.draw(c.getContext('2d'),16,16,12);div.appendChild(c);
-    const nm=document.createElement('div');nm.textContent=sk.name;div.appendChild(nm);
-    const pr=document.createElement('div');pr.textContent=owned?(eq?'ON':'USE'):'🪙'+sk.cost;div.appendChild(pr);
-    div.addEventListener('click',()=>{
-      if(owned){equippedSkin=id;LS.set('bb-eskin',id);buildShopSkins();}
-      else if(totalCoins>=sk.cost){totalCoins-=sk.cost;ownedSkins.push(id);equippedSkin=id;saveAll();document.getElementById('shopCoins').textContent=totalCoins;buildShopSkins();}
-    });
-    grid.appendChild(div);
-  });
-}
-function buildShopThemes(){
-  const grid=document.getElementById('themeGrid');grid.innerHTML='';
-  Object.entries(THEMES_DEF).forEach(([id,th])=>{
-    const owned=ownedThemes.includes(id),eq=equippedTheme===id;
-    const div=document.createElement('div');div.className='shop-item'+(owned?' owned':'')+(eq?' equipped':'');
-    const c=document.createElement('canvas');c.width=32;c.height=32;
-    const cx2=c.getContext('2d');
-    cx2.fillStyle=id==='sky'?'#87ceeb':id==='ocean'?'#006080':'#1a0500';cx2.fillRect(0,0,32,32);
-    cx2.fillStyle=th.pfCol;cx2.fillRect(4,22,24,4);div.appendChild(c);
-    const nm=document.createElement('div');nm.textContent=th.name;div.appendChild(nm);
-    const pr=document.createElement('div');pr.textContent=owned?(eq?'ON':'USE'):'🪙'+th.cost;div.appendChild(pr);
-    div.addEventListener('click',()=>{
-      if(owned){equippedTheme=id;LS.set('bb-etheme',id);buildShopThemes();}
-      else if(totalCoins>=th.cost){totalCoins-=th.cost;ownedThemes.push(id);equippedTheme=id;saveAll();document.getElementById('shopCoins').textContent=totalCoins;buildShopThemes();}
-    });
-    grid.appendChild(div);
-  });
-}
-document.getElementById('btnCloseShop').addEventListener('click',()=>{
-  hide('shopOv');
-  if(_shopFrom==='gameover')show('gameoverOv');
-  else{updateMenuUI();show('menuOv');}
-});
 
 // ── Init ──
 updateMenuUI();
