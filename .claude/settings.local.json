@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(git -C \"C:\\\\Users\\\\akclo\\\\OneDrive\\\\?? ??\\\\gamefolder_git\" status 2>&1)",
+      "PowerShell(git -C \"C:\\\\Users\\\\akclo\\\\OneDrive\\\\?? ??\\\\gamefolder_git\" remote -v 2>&1)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(where npx *)",
+      "PowerShell(\\(Get-Command npx -ErrorAction SilentlyContinue\\).Source; \\(Get-Command node -ErrorAction SilentlyContinue\\).Source; \\(Get-Command python -ErrorAction SilentlyContinue\\).Source)",
+      "mcp__visualize__read_me",
+      "mcp__visualize__show_widget",
+      "Bash(node -e ' *)",
+      "PowerShell(Start-Process \"C:\\\\Users\\\\akclo\\\\OneDrive\\\\?? ??\\\\gamefolder_git\\\\Game-projects\\\\last_war.html\")",
+      "Bash(git -C \"C:/Users/akclo/OneDrive/바탕 화면/gamefolder_git\" status)",
+      "Bash(git -C \"C:/Users/akclo/OneDrive/바탕 화면/gamefolder_git\" add Game-projects .claude/launch.json .claude/settings.local.json)"
+    ]
+  }
+}

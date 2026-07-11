@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "game",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "4322", "--directory", "Game-projects"],
+      "openFile": "last_war.html",
+      "port": 4322
+    }
+  ]
+}
