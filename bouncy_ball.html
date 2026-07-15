@@ -197,13 +197,12 @@ const LS={
 };
 let totalCoins    =LS.get('bb-coins', 0);
 let bestScore     =LS.get('bb-best',  0);
-let ownedSkins    =LS.get('bb-skins',  ['default']);
-let ownedThemes   =LS.get('bb-themes', ['sky']);
+let ownedSkins    =['default'];
+let ownedThemes   =['sky'];
 let equippedSkin  =LS.get('bb-eskin',  'default');
 let equippedTheme =LS.get('bb-etheme', 'sky');
 function saveAll(){
   LS.set('bb-coins',totalCoins); LS.set('bb-best',bestScore);
-  LS.set('bb-skins',ownedSkins); LS.set('bb-themes',ownedThemes);
   LS.set('bb-eskin',equippedSkin); LS.set('bb-etheme',equippedTheme);
 }
 
@@ -240,6 +239,9 @@ const SKINS={
   blackhole:{name:'B.HOLE', cost:100,draw:(cx,x,y,r)=>{ const g=cx.createRadialGradient(x,y,0,x,y,r); g.addColorStop(0,'#000'); g.addColorStop(.6,'#330066'); g.addColorStop(1,'#9900cc'); cx.fillStyle=g; cx.beginPath(); cx.arc(x,y,r,0,Math.PI*2); cx.fill(); cx.strokeStyle='rgba(200,100,255,.6)'; cx.lineWidth=1; cx.beginPath(); cx.arc(x,y,r+2,0,Math.PI*2); cx.stroke(); }},
 };
 
+// unlock all skins
+ownedSkins = SKIN_LIST.slice();
+
 // ── Themes ──
 const THEME_LIST=['sky','ocean','lavacave'];
 const THEMES_DEF={
@@ -247,6 +249,8 @@ const THEMES_DEF={
   ocean:    {name:'OCEAN',cost:50, pfCol:'#80d0e0', bg:cy=>oceanBg(cy)},
   lavacave: {name:'LAVA', cost:80, pfCol:'#e8a060', bg:cy=>lavaBg(cy)},
 };
+// unlock all themes
+ownedThemes = THEME_LIST.slice();
 function skyBg(camY){
   const alt=-camY;
   if(alt<2000){
