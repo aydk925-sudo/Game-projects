@@ -314,10 +314,16 @@ function genPlatform(y){
 }
 
 function spawnEnemy(y){
-  const r=Math.random();
-  const type=r<0.5?'slime':r<0.8?'bat':'spikeball';
-  const coinDrop=type==='slime'?2:type==='bat'?3:5;
-  enemies.push({type,x:Math.random()*(W-16)+8,y,vx:(Math.random()<.5?-0.6:0.6),vy:0,hp:1,coins:coinDrop,shootTimer:2+Math.random()*2});
+  let type;
+  if(equippedTheme==='ocean'){
+    const r=Math.random();
+    type=r<0.45?'jellyfish':r<0.75?'puffer':r<0.9?'bat':'spikeball';
+  } else {
+    const r=Math.random();
+    type=r<0.5?'slime':r<0.8?'bat':'spikeball';
+  }
+  const coinDrop=type==='slime'?2:type==='bat'?3:type==='jellyfish'?3:type==='puffer'?4:5;
+  enemies.push({type,x:Math.random()*(W-16)+8,y,vx:(Math.random()<.5?-0.6:0.6),vy:0,hp:1,coins:coinDrop,shootTimer:2+Math.random()*2,phase:Math.random()*Math.PI*2});
 }
 
 function updatePlay(dt){
@@ -367,13 +373,30 @@ function updatePlay(dt){
     } else if(e.type==='bat'){
       const dx=ball.x-e.x,dy=ball.y-e.y,dist=Math.sqrt(dx*dx+dy*dy)||1;
       e.x+=dx/dist*.5; e.y+=dy/dist*.5;
+    } else if(e.type==='jellyfish'){
+      e.phase+=0.04; e.y+=Math.sin(e.phase)*0.5;
+      e.x+=e.vx*0.4; if(e.x<8||e.x>W-8)e.vx*=-1;
+      e.shootTimer-=dt;
+      if(e.shootTimer<=0){
+        e.shootTimer=3+Math.random()*2;
+        enemyProjectiles.push({x:e.x,y:e.y,vx:(Math.random()-.5)*1.5,vy:-2.5,etype:'bubble'});
+      }
+    } else if(e.type==='puffer'){
+      e.x+=e.vx*0.4; if(e.x<8||e.x>W-8)e.vx*=-1;
+      const dx2=ball.x-e.x,dy2=ball.y-e.y;
+      if(Math.sqrt(dx2*dx2+dy2*dy2)<65&&!e.puffing){
+        e.puffing=true; e.puffTimer=0.5;
+        for(let i=0;i<8;i++){const a=i*Math.PI/4;enemyProjectiles.push({x:e.x,y:e.y,vx:Math.cos(a)*3,vy:Math.sin(a)*3,etype:'spike'});}
+      }
+      if(e.puffing){e.puffTimer-=dt;if(e.puffTimer<=0)e.puffing=false;}
     } else {
       e.vy=e.vy||0.6; e.y+=e.vy;
       if((e.y-camY)<0||(e.y-camY)>H+40)e.vy*=-1;
     }
     if(!ball.dead&&ball.invuln<=0){
       const dx=ball.x-e.x,dy=ball.y-e.y;
-      if(dx*dx+dy*dy<(BALL_R+7)*(BALL_R+7))killBall();
+      const hr=e.type==='puffer'?(e.puffing?13:9):7;
+      if(dx*dx+dy*dy<(BALL_R+hr)*(BALL_R+hr))killBall();
     }
   }
   enemies=enemies.filter(e=>e.y<camY+H+100&&e.y>camY-200);
@@ -454,7 +477,7 @@ function draw(){
   for(const p of platforms){const py=p.y-camY;if(py<-10||py>H+10)continue;drawPlatform(p,py);}
   for(const cn of coins){const cy2=cn.y-camY;if(cy2<-10||cy2>H+10)continue;ctx.fillStyle='#ffd700';ctx.beginPath();ctx.arc(cn.x,cy2,4,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ffee88';ctx.beginPath();ctx.arc(cn.x-1,cy2-1,1.5,0,Math.PI*2);ctx.fill();}
   for(const e of enemies){const ey=e.y-camY;if(ey<-20||ey>H+20)continue;drawEnemy(e,ey);}
-  for(const ep of enemyProjectiles){const epy=ep.y-camY;ctx.fillStyle='#88ff44';ctx.beginPath();ctx.arc(ep.x,epy,3,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(100,255,50,.4)';ctx.beginPath();ctx.arc(ep.x,epy,5,0,Math.PI*2);ctx.fill();}
+  for(const ep of enemyProjectiles){const epy=ep.y-camY;if(ep.etype==='bubble'){ctx.fillStyle='rgba(80,200,255,0.5)';ctx.beginPath();ctx.arc(ep.x,epy,5,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(160,240,255,0.8)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(ep.x,epy,5,0,Math.PI*2);ctx.stroke();}else if(ep.etype==='spike'){ctx.fillStyle='#ff6600';ctx.beginPath();ctx.arc(ep.x,epy,3,0,Math.PI*2);ctx.fill();}else{ctx.fillStyle='#88ff44';ctx.beginPath();ctx.arc(ep.x,epy,3,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(100,255,50,.4)';ctx.beginPath();ctx.arc(ep.x,epy,5,0,Math.PI*2);ctx.fill();}}
   for(const pr of projectiles){const pry=pr.y-camY;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(pr.x,pry,3,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(200,255,220,.5)';ctx.beginPath();ctx.arc(pr.x,pry,5,0,Math.PI*2);ctx.fill();}
   if(!ball.dead){const by=ball.y-camY;if(ball.invuln>0&&Math.floor(ball.invuln*10)%2===0)ctx.globalAlpha=.4;SKINS[equippedSkin].draw(ctx,ball.x,by,BALL_R);ctx.globalAlpha=1;}
   for(const p of particles){ctx.fillStyle=p.col;ctx.globalAlpha=p.life*2;ctx.fillRect(p.x-1,p.y-camY-1,2,2);}
@@ -499,6 +522,18 @@ function drawEnemy(e,ey){
     ctx.fillStyle='#8040c0';ctx.beginPath();ctx.ellipse(e.x,ey,5,4,0,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#6020a0';ctx.beginPath();ctx.ellipse(e.x-9,ey-1,6,3,-.3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(e.x+9,ey-1,6,3,.3,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#ff4040';ctx.beginPath();ctx.arc(e.x-2,ey,1.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(e.x+2,ey,1.5,0,Math.PI*2);ctx.fill();
+  } else if(e.type==='jellyfish'){
+    ctx.fillStyle='rgba(160,80,220,0.75)';ctx.beginPath();ctx.arc(e.x,ey,8,Math.PI,0);ctx.closePath();ctx.fill();
+    ctx.fillStyle='rgba(210,140,255,0.5)';ctx.beginPath();ctx.arc(e.x,ey,5,Math.PI,0);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='rgba(180,80,240,0.7)';ctx.lineWidth=1;
+    const ph=e.phase||0;
+    for(let i=0;i<4;i++){const tx=e.x+(i-1.5)*4;ctx.beginPath();ctx.moveTo(tx,ey);ctx.bezierCurveTo(tx+Math.sin(ph+i)*2,ey+4,tx+Math.sin(ph+i+1)*2,ey+8,tx+Math.sin(ph+i)*3,ey+12);ctx.stroke();}
+  } else if(e.type==='puffer'){
+    const pr=e.puffing?11:7;
+    ctx.fillStyle=e.puffing?'#ff8800':'#ffaa22';ctx.beginPath();ctx.arc(e.x,ey,pr,0,Math.PI*2);ctx.fill();
+    if(e.puffing){ctx.strokeStyle='#ff4400';ctx.lineWidth=1.5;for(let i=0;i<8;i++){const a=i*Math.PI/4;ctx.beginPath();ctx.moveTo(e.x+Math.cos(a)*pr,ey+Math.sin(a)*pr);ctx.lineTo(e.x+Math.cos(a)*(pr+5),ey+Math.sin(a)*(pr+5));ctx.stroke();}}
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(e.x-2,ey-1,2,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#333';ctx.beginPath();ctx.arc(e.x-2,ey-1,1,0,Math.PI*2);ctx.fill();
   } else {
     ctx.fillStyle='#c04040';ctx.beginPath();ctx.arc(e.x,ey,7,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#e06060';for(let i=0;i<8;i++){const a=i*Math.PI/4;ctx.fillRect(e.x+Math.cos(a)*6-1,ey+Math.sin(a)*6-1,3,3);}
