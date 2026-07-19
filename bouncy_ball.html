@@ -242,6 +242,33 @@ const SKINS={
 // unlock all skins
 ownedSkins = SKIN_LIST.slice();
 
+// ── Map-specific skins ──
+const MAP_SKIN_LISTS={
+  sky:      ['sky_cloud','sky_sun','sky_storm','sky_rainbow','sky_wind'],
+  ocean:    ['ocean_bubble','ocean_coral','ocean_pearl','ocean_deep','ocean_tide'],
+  lavacave: ['lava_magma','lava_crystal','lava_skull','lava_coal','lava_gold'],
+};
+Object.assign(SKINS,{
+  sky_cloud:   {name:'CLOUD',  cost:0,draw:(cx,x,y,r)=>{cx.fillStyle='#eef4ff';cx.beginPath();cx.arc(x,y,r,0,Math.PI*2);cx.fill();cx.fillStyle='rgba(255,255,255,.78)';cx.beginPath();cx.arc(x-r*.3,y-r*.08,r*.54,0,Math.PI*2);cx.fill();cx.beginPath();cx.arc(x+r*.3,y-r*.08,r*.44,0,Math.PI*2);cx.fill();cx.beginPath();cx.arc(x,y+r*.1,r*.5,0,Math.PI*2);cx.fill();}},
+  sky_sun:     {name:'SUN',    cost:0,draw:(cx,x,y,r)=>{cx.fillStyle='rgba(255,200,0,.22)';cx.beginPath();cx.arc(x,y,r*1.3,0,Math.PI*2);cx.fill();cx.strokeStyle='#ffa000';cx.lineWidth=2;for(let i=0;i<8;i++){const a=i*Math.PI/4;cx.beginPath();cx.moveTo(x+Math.cos(a)*r*.8,y+Math.sin(a)*r*.8);cx.lineTo(x+Math.cos(a)*r*1.25,y+Math.sin(a)*r*1.25);cx.stroke();}cx.fillStyle='#ffcc00';cx.beginPath();cx.arc(x,y,r*.72,0,Math.PI*2);cx.fill();cx.fillStyle='#ffe84a';cx.beginPath();cx.arc(x,y,r*.4,0,Math.PI*2);cx.fill();}},
+  sky_storm:   {name:'STORM',  cost:0,draw:(cx,x,y,r)=>{const g=cx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,'#607080');g.addColorStop(1,'#1e2830');cx.fillStyle=g;cx.beginPath();cx.arc(x,y,r,0,Math.PI*2);cx.fill();cx.strokeStyle='#ffe040';cx.lineWidth=2;cx.beginPath();cx.moveTo(x-r*.15,y-r*.5);cx.lineTo(x+r*.15,y-r*.05);cx.lineTo(x-r*.1,y+r*.15);cx.lineTo(x+r*.25,y+r*.6);cx.stroke();}},
+  sky_rainbow: {name:'RAINBOW',cost:0,draw:(cx,x,y,r)=>{cx.save();cx.beginPath();cx.arc(x,y,r,0,Math.PI*2);cx.clip();['#ff4040','#ff9020','#ffee20','#40dd40','#2080ff','#9040ff'].forEach((c,i,a)=>{cx.fillStyle=c;cx.fillRect(x-r,y-r+i*(r*2/a.length),r*2,r*2/a.length);});cx.fillStyle='rgba(255,255,255,.22)';cx.beginPath();cx.arc(x-r*.3,y-r*.3,r*.28,0,Math.PI*2);cx.fill();cx.restore();}},
+  sky_wind:    {name:'WIND',   cost:0,draw:(cx,x,y,r)=>{cx.fillStyle='#c8f0ff';cx.beginPath();cx.arc(x,y,r,0,Math.PI*2);cx.fill();cx.strokeStyle='rgba(80,160,220,.65)';cx.lineWidth=1.5;cx.beginPath();cx.moveTo(x-r*.6,y-r*.2);cx.bezierCurveTo(x-r*.2,y-r*.55,x+r*.2,y+r*.2,x+r*.65,y-r*.1);cx.stroke();cx.beginPath();cx.moveTo(x-r*.5,y+r*.25);cx.bezierCurveTo(x-r*.1,y-r*.1,x+r*.3,y+r*.45,x+r*.7,y+r*.1);cx.stroke();cx.fillStyle='rgba(255,255,255,.45)';cx.beginPath();cx.arc(x-r*.25,y-r*.25,r*.18,0,Math.PI*2);cx.fill();}},
+  ocean_bubble:{name:'BUBBLE', cost:0,draw:(cx,x,y,r)=>{cx.fillStyle='rgba(100,190,255,.22)';cx.beginPath();cx.arc(x,y,r,0,Math.PI*2);cx.fill();cx.strokeStyle='rgba(160,220,255,.85)';cx.lineWidth=1.8;cx.beginPath();cx.arc(x,y,r,0,Math.PI*2);cx.stroke();cx.fillStyle='rgba(255,255,255,.7)';cx.beginPath();cx.arc(x-r*.35,y-r*.35,r*.22,0,Math.PI*2);cx.fill();cx.fillStyle='rgba(255,255,255,.3)';cx.beginPath();cx.arc(x+r*.2,y-r*.5,r*.1,0,Math.PI*2);cx.fill();}},
+  ocean_coral: {name:'CORAL',  cost:0,draw:(cx,x,y,r)=>{cx.fillStyle='#e05870';cx.beginPath();cx.arc(x,y,r,0,Math.PI*2);cx.fill();cx.fillStyle='#f07888';for(let i=0;i<6;i++){const a=i*Math.PI/3;cx.beginPath();cx.arc(x+Math.cos(a)*r*.5,y+Math.sin(a)*r*.5,r*.28,0,Math.PI*2);cx.fill();}cx.fillStyle='#ff9aaa';cx.beginPath();cx.arc(x,y,r*.28,0,Math.PI*2);cx.fill();}},
+  ocean_pearl: {name:'PEARL',  cost:0,draw:(cx,x,y,r)=>{const g=cx.createRadialGradient(x-r*.3,y-r*.3,0,x,y,r);g.addColorStop(0,'#fff');g.addColorStop(.45,'#e8d8f0');g.addColorStop(1,'#a090b8');cx.fillStyle=g;cx.beginPath();cx.arc(x,y,r,0,Math.PI*2);cx.fill();cx.fillStyle='rgba(255,255,255,.6)';cx.beginPath();cx.arc(x-r*.3,y-r*.3,r*.22,0,Math.PI*2);cx.fill();}},
+  ocean_deep:  {name:'ABYSS',  cost:0,draw:(cx,x,y,r)=>{const g=cx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,'#003060');g.addColorStop(.6,'#001828');g.addColorStop(1,'#00080e');cx.fillStyle=g;cx.beginPath();cx.arc(x,y,r,0,Math.PI*2);cx.fill();cx.fillStyle='rgba(0,200,255,.65)';[[-.5,-.2],[.4,.3],[-.2,.5],[.5,-.4],[0,-.6]].forEach(([dx,dy])=>{cx.beginPath();cx.arc(x+dx*r,y+dy*r,1.5,0,Math.PI*2);cx.fill();});cx.fillStyle='rgba(0,220,200,.35)';cx.beginPath();cx.arc(x,y,r*.32,0,Math.PI*2);cx.fill();}},
+  ocean_tide:  {name:'TIDE',   cost:0,draw:(cx,x,y,r)=>{cx.fillStyle='#1a6080';cx.beginPath();cx.arc(x,y,r,0,Math.PI*2);cx.fill();cx.save();cx.beginPath();cx.arc(x,y,r,0,Math.PI*2);cx.clip();cx.fillStyle='rgba(80,200,220,.5)';cx.beginPath();cx.moveTo(x-r,y+r*.1);for(let i=0;i<=4;i++){cx.bezierCurveTo(x-r+i*r*.5,y-r*.25,x-r+i*r*.5+r*.25,y+r*.35,x-r+(i+1)*r*.5,y+r*.1);}cx.lineTo(x+r,y+r);cx.lineTo(x-r,y+r);cx.closePath();cx.fill();cx.restore();cx.fillStyle='rgba(200,240,255,.3)';cx.beginPath();cx.arc(x-r*.25,y-r*.3,r*.17,0,Math.PI*2);cx.fill();}},
+  lava_magma:  {name:'MAGMA',  cost:0,draw:(cx,x,y,r)=>{const g=cx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,'#ffcc00');g.addColorStop(.45,'#ff6600');g.addColorStop(1,'#7a0000');cx.fillStyle=g;cx.beginPath();cx.arc(x,y,r,0,Math.PI*2);cx.fill();cx.strokeStyle='#6a0000';cx.lineWidth=1;[[0,.68],[1.05,.58],[2.1,.7],[3.14,.6],[4.2,.65],[5.24,.55]].forEach(([a,l])=>{cx.beginPath();cx.moveTo(x,y);cx.lineTo(x+Math.cos(a)*r*l,y+Math.sin(a)*r*l);cx.stroke();});}},
+  lava_crystal:{name:'CRYSTAL',cost:0,draw:(cx,x,y,r)=>{cx.fillStyle='#2020a0';cx.beginPath();cx.arc(x,y,r,0,Math.PI*2);cx.fill();cx.fillStyle='rgba(100,120,255,.55)';cx.beginPath();for(let i=0;i<6;i++){const a=i*Math.PI/3;i===0?cx.moveTo(x+Math.cos(a)*r*.82,y+Math.sin(a)*r*.82):cx.lineTo(x+Math.cos(a)*r*.82,y+Math.sin(a)*r*.82);}cx.closePath();cx.fill();cx.fillStyle='rgba(200,220,255,.6)';cx.beginPath();cx.arc(x-r*.28,y-r*.32,r*.2,0,Math.PI*2);cx.fill();cx.strokeStyle='rgba(160,180,255,.4)';cx.lineWidth=1;cx.beginPath();cx.arc(x,y,r,0,Math.PI*2);cx.stroke();}},
+  lava_skull:  {name:'SKULL',  cost:0,draw:(cx,x,y,r)=>{cx.fillStyle='#d0c8b8';cx.beginPath();cx.arc(x,y-r*.1,r*.88,0,Math.PI*2);cx.fill();cx.fillStyle='#aaa098';cx.fillRect(x-r*.4,y+r*.32,r*.3,r*.4);cx.fillRect(x+r*.1,y+r*.32,r*.3,r*.4);cx.fillStyle='#181008';cx.beginPath();cx.ellipse(x-r*.28,y-r*.05,r*.2,r*.23,0,0,Math.PI*2);cx.fill();cx.beginPath();cx.ellipse(x+r*.28,y-r*.05,r*.2,r*.23,0,0,Math.PI*2);cx.fill();cx.fillStyle='rgba(255,80,0,.4)';cx.beginPath();cx.ellipse(x-r*.28,y-r*.05,r*.11,r*.13,0,0,Math.PI*2);cx.fill();cx.beginPath();cx.ellipse(x+r*.28,y-r*.05,r*.11,r*.13,0,0,Math.PI*2);cx.fill();}},
+  lava_coal:   {name:'COAL',   cost:0,draw:(cx,x,y,r)=>{cx.fillStyle='#181010';cx.beginPath();cx.arc(x,y,r,0,Math.PI*2);cx.fill();cx.strokeStyle='#ff4400';cx.lineWidth=1;[[0,.62],[1.05,.5],[2.1,.68],[3.14,.55],[4.2,.65],[5.24,.5]].forEach(([a,l])=>{cx.beginPath();cx.moveTo(x+Math.cos(a)*r*.12,y+Math.sin(a)*r*.12);cx.lineTo(x+Math.cos(a)*r*l,y+Math.sin(a)*r*l);cx.stroke();});cx.fillStyle='rgba(255,70,0,.3)';cx.beginPath();cx.arc(x,y,r*.32,0,Math.PI*2);cx.fill();}},
+  lava_gold:   {name:'GOLD',   cost:0,draw:(cx,x,y,r)=>{const g=cx.createRadialGradient(x-r*.25,y-r*.2,0,x,y,r);g.addColorStop(0,'#fff0a0');g.addColorStop(.5,'#ffa000');g.addColorStop(1,'#7a4800');cx.fillStyle=g;cx.beginPath();cx.arc(x,y,r,0,Math.PI*2);cx.fill();cx.strokeStyle='rgba(180,100,0,.4)';cx.lineWidth=1.5;cx.beginPath();cx.arc(x,y,r*.6,0,Math.PI*2);cx.stroke();cx.fillStyle='rgba(255,255,200,.45)';cx.beginPath();cx.arc(x-r*.3,y-r*.25,r*.18,0,Math.PI*2);cx.fill();}},
+});
+ownedSkins=[...ownedSkins,...Object.values(MAP_SKIN_LISTS).flat()];
+function getActiveSkinList(){ return MAP_SKIN_LISTS[equippedTheme]||SKIN_LIST; }
+(function(){const list=MAP_SKIN_LISTS[equippedTheme];if(list&&!list.includes(equippedSkin)){equippedSkin=list[0];LS.set('bb-eskin',equippedSkin);}})();
+
 // ── Themes ──
 const THEME_LIST=['sky','ocean','lavacave'];
 const THEMES_DEF={
@@ -642,9 +669,9 @@ function togglePause(){
 }
 
 // ── Skin picker ──
-let skinPickerIdx=Math.max(0,SKIN_LIST.indexOf(equippedSkin));
+let skinPickerIdx=Math.max(0,getActiveSkinList().indexOf(equippedSkin));
 function renderSkinPicker(){
-  const id=SKIN_LIST[skinPickerIdx];
+  const id=getActiveSkinList()[skinPickerIdx];
   const sk=SKINS[id];
   const owned=ownedSkins.includes(id),eq=equippedSkin===id;
   const c=document.getElementById('skinPreviewC');
@@ -662,14 +689,14 @@ function renderSkinPicker(){
     buyBtn.disabled=totalCoins<sk.cost; buyBtn.style.opacity=totalCoins<sk.cost?'.4':'1';
   }
 }
-document.getElementById('skinLeft').addEventListener('click',e=>{e.stopPropagation();skinPickerIdx=(skinPickerIdx-1+SKIN_LIST.length)%SKIN_LIST.length;renderSkinPicker();});
-document.getElementById('skinRight').addEventListener('click',e=>{e.stopPropagation();skinPickerIdx=(skinPickerIdx+1)%SKIN_LIST.length;renderSkinPicker();});
+document.getElementById('skinLeft').addEventListener('click',e=>{e.stopPropagation();const sl=getActiveSkinList();skinPickerIdx=(skinPickerIdx-1+sl.length)%sl.length;renderSkinPicker();});
+document.getElementById('skinRight').addEventListener('click',e=>{e.stopPropagation();const sl=getActiveSkinList();skinPickerIdx=(skinPickerIdx+1)%sl.length;renderSkinPicker();});
 document.getElementById('btnBuySkin').addEventListener('click',e=>{
   e.stopPropagation();
-  const id=SKIN_LIST[skinPickerIdx];const sk=SKINS[id];const owned=ownedSkins.includes(id);
+  const sl=getActiveSkinList();const id=sl[skinPickerIdx];const sk=SKINS[id];const owned=ownedSkins.includes(id);
   if(owned){equippedSkin=id;LS.set('bb-eskin',id);}
   else if(totalCoins>=sk.cost){totalCoins-=sk.cost;ownedSkins.push(id);equippedSkin=id;saveAll();document.getElementById('menuCoins').textContent=totalCoins;}
-  skinPickerIdx=SKIN_LIST.indexOf(equippedSkin);
+  skinPickerIdx=sl.indexOf(equippedSkin);
   renderSkinPicker();
 });
 
@@ -710,7 +737,12 @@ document.getElementById('btnBuyTheme').addEventListener('click',e=>{
   if(owned){equippedTheme=id;LS.set('bb-etheme',id);}
   else if(totalCoins>=th.cost){totalCoins-=th.cost;ownedThemes.push(id);equippedTheme=id;saveAll();document.getElementById('menuCoins').textContent=totalCoins;}
   themePickerIdx=THEME_LIST.indexOf(equippedTheme);
+  // reset skin to first of new map if current skin doesn't belong there
+  const newSkinList=getActiveSkinList();
+  if(!newSkinList.includes(equippedSkin)){equippedSkin=newSkinList[0];LS.set('bb-eskin',equippedSkin);}
+  skinPickerIdx=Math.max(0,newSkinList.indexOf(equippedSkin));
   renderThemePicker();
+  renderSkinPicker();
 });
 
 // ── Menu / overlay buttons ──
@@ -722,7 +754,7 @@ document.getElementById('btnMenu').addEventListener('click',()=>{hideAll();state
 function updateMenuUI(){
   document.getElementById('menuBest').textContent=bestScore;
   document.getElementById('menuCoins').textContent=totalCoins;
-  skinPickerIdx=Math.max(0,SKIN_LIST.indexOf(equippedSkin));
+  skinPickerIdx=Math.max(0,getActiveSkinList().indexOf(equippedSkin));
   themePickerIdx=Math.max(0,THEME_LIST.indexOf(equippedTheme));
   renderSkinPicker(); renderThemePicker();
 }
