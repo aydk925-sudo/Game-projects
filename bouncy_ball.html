@@ -318,7 +318,7 @@ const BALL_R=6,GRAVITY=0.35,JUMP_VY=-8.5,SPRING_VY=-16,PLAT_H=6;
 
 function newGame(){
   camY=0; score=0; sessionCoins=0; shootCooldown=0;
-  ball={x:W/2,y:H-30,vx:0,vy:JUMP_VY,dead:false,invuln:0};
+  ball={x:W/2,y:H-30,vx:0,vy:JUMP_VY,dead:false,invuln:0,bounceCount:0};
   platforms=[]; enemies=[]; projectiles=[]; enemyProjectiles=[]; particles=[]; coins=[];
   platforms.push({x:W/2-25,y:H-20,w:50,type:'normal',vx:0,timer:0,broken:false});
   for(let i=0;i<14;i++) genPlatform(H-50-i*32);
@@ -361,11 +361,12 @@ function spawnEnemy(y){
 
 function updatePlay(dt){
   shootCooldown-=dt;
-  const speed=2.5;
+  const speed=equippedSkin==='sky_wind'?3.8:2.5;
   if(keys['ArrowLeft']||keys['KeyA'])       ball.vx=-speed;
   else if(keys['ArrowRight']||keys['KeyD']) ball.vx= speed;
   else ball.vx*=0.8;
-  ball.vy+=GRAVITY; ball.x+=ball.vx; ball.y+=ball.vy;
+  const grav=equippedSkin==='sky_wind'?0.26:GRAVITY;
+  ball.vy+=grav; ball.x+=ball.vx; ball.y+=ball.vy;
   if(ball.x<-BALL_R) ball.x=W+BALL_R;
   if(ball.x>W+BALL_R) ball.x=-BALL_R;
   if(ball.y<camY+H*.4){ camY-=(camY+H*.4)-ball.y; score=Math.max(score,Math.round(-camY/10)); if(score>bestScore){bestScore=score;LS.set('bb-best',bestScore);} }
@@ -381,7 +382,12 @@ function updatePlay(dt){
       if(ball.x>=p.x&&ball.x<=p.x+p.w&&ball.y+BALL_R>=p.y&&ball.y+BALL_R<=p.y+PLAT_H+ball.vy+2){
         if(p.type==='spike'){killBall();break;}
         else if(p.type==='spring'){ball.vy=SPRING_VY;SFX.spring();}
-        else{ball.vy=JUMP_VY;SFX.bounce();}
+        else{
+          ball.vy=JUMP_VY;SFX.bounce();
+          ball.bounceCount=(ball.bounceCount||0)+1;
+          if(equippedSkin==='sky_cloud'&&ball.bounceCount%5===0){ball.invuln=2.5;spawnParticles(ball.x,ball.y,'#ffffff',10);}
+          if(equippedSkin==='sky_rainbow'){score+=2;const rc=['#ff4488','#ffaa00','#44ffaa','#44aaff','#cc44ff'];spawnParticles(ball.x,ball.y,rc[ball.bounceCount%5],5);}
+        }
         if(p.type==='breakable'){p.broken=true;p.timer=0.5;}
         break;
       }
@@ -472,8 +478,10 @@ function updatePlay(dt){
   projectiles=projectiles.filter(pr=>!pr.dead&&pr.x>-10&&pr.x<W+10&&pr.y>camY-50&&pr.y<camY+H+50);
   for(const cn of coins){
     if(cn.collected)continue;
-    const dx=ball.x-cn.x,dy=ball.y-cn.y;
-    if(dx*dx+dy*dy<(BALL_R+7)*(BALL_R+7)){cn.collected=true;sessionCoins++;spawnParticles(cn.x,cn.y,'#ffd700',4);SFX.coin();}
+    const dx=ball.x-cn.x,dy=ball.y-cn.y,distSq=dx*dx+dy*dy;
+    if(equippedSkin==='sky_sun'&&distSq<70*70){const d=Math.sqrt(distSq)||1;cn.x+=dx/d*3.5;cn.y+=dy/d*3.5;}
+    const collectR=equippedSkin==='sky_sun'?BALL_R+16:BALL_R+7;
+    if(distSq<collectR*collectR){cn.collected=true;sessionCoins++;spawnParticles(cn.x,cn.y,'#ffd700',4);SFX.coin();}
   }
   coins=coins.filter(cn=>!cn.collected&&cn.y<camY+H+60);
   for(const p of particles){p.x+=p.vx;p.y+=p.vy;p.life-=dt;}
@@ -530,7 +538,7 @@ function draw(){
   for(const e of enemies){const ey=e.y-camY;if(ey<-20||ey>H+20)continue;drawEnemy(e,ey);}
   for(const ep of enemyProjectiles){const epy=ep.y-camY;if(ep.etype==='bubble'){ctx.fillStyle='rgba(80,200,255,0.5)';ctx.beginPath();ctx.arc(ep.x,epy,5,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(160,240,255,0.8)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(ep.x,epy,5,0,Math.PI*2);ctx.stroke();}else if(ep.etype==='spike'){ctx.fillStyle='#ff6600';ctx.beginPath();ctx.arc(ep.x,epy,3,0,Math.PI*2);ctx.fill();}else if(ep.etype==='lightning'){ctx.strokeStyle='#ffe040';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(ep.x-2,epy-6);ctx.lineTo(ep.x+2,epy-1);ctx.lineTo(ep.x-1,epy+3);ctx.lineTo(ep.x+2,epy+7);ctx.stroke();ctx.fillStyle='rgba(255,240,80,0.4)';ctx.beginPath();ctx.arc(ep.x,epy,5,0,Math.PI*2);ctx.fill();}else if(ep.etype==='lava'){ctx.fillStyle='#ff5500';ctx.beginPath();ctx.arc(ep.x,epy,4,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(255,160,0,0.5)';ctx.beginPath();ctx.arc(ep.x,epy,6,0,Math.PI*2);ctx.fill();}else{ctx.fillStyle='#88ff44';ctx.beginPath();ctx.arc(ep.x,epy,3,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(100,255,50,.4)';ctx.beginPath();ctx.arc(ep.x,epy,5,0,Math.PI*2);ctx.fill();}}
   for(const pr of projectiles){const pry=pr.y-camY;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(pr.x,pry,3,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(200,255,220,.5)';ctx.beginPath();ctx.arc(pr.x,pry,5,0,Math.PI*2);ctx.fill();}
-  if(!ball.dead){const by=ball.y-camY;if(ball.invuln>0&&Math.floor(ball.invuln*10)%2===0)ctx.globalAlpha=.4;SKINS[equippedSkin].draw(ctx,ball.x,by,BALL_R);ctx.globalAlpha=1;}
+  if(!ball.dead){const by=ball.y-camY;if(ball.invuln>0&&Math.floor(ball.invuln*10)%2===0)ctx.globalAlpha=.4;SKINS[equippedSkin].draw(ctx,ball.x,by,BALL_R);ctx.globalAlpha=1;if(equippedSkin==='sky_cloud'&&ball.invuln>0){ctx.strokeStyle='rgba(255,255,255,0.85)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(ball.x,by,BALL_R+5,0,Math.PI*2);ctx.stroke();}if(equippedSkin==='sky_sun'){ctx.strokeStyle='rgba(255,220,0,0.35)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(ball.x,by,BALL_R+38,0,Math.PI*2);ctx.stroke();}}
   for(const p of particles){ctx.fillStyle=p.col;ctx.globalAlpha=p.life*2;ctx.fillRect(p.x-1,p.y-camY-1,2,2);}
   ctx.globalAlpha=1;
   ctx.fillStyle='rgba(0,0,0,.45)';ctx.fillRect(0,0,W,18);
@@ -538,6 +546,8 @@ function draw(){
   ctx.fillStyle='#a8f0c8';ctx.fillText('▲'+score,4,12);
   ctx.fillStyle='#ffd700';ctx.fillText('🪙'+totalCoins,W/2-15,12);
   ctx.fillStyle='#ccc';ctx.fillText('BEST:'+bestScore,W-70,12);
+  const _skyAbilHUD={sky_cloud:'☁ SHIELD',sky_sun:'☀ MAGNET',sky_storm:'⚡ 3-SHOT',sky_rainbow:'🌈 +SCORE',sky_wind:'💨 SPEED'};
+  if(_skyAbilHUD[equippedSkin]){ctx.font='bold 7px Courier New';ctx.fillStyle='rgba(160,210,255,.8)';ctx.fillText(_skyAbilHUD[equippedSkin],4,26);}
 }
 
 function drawPlatform(p,py){
@@ -634,7 +644,13 @@ wrap.addEventListener('click',e=>{
   if(state==='paused'){togglePause();return;}
   if(state==='play'){
     if(shootCooldown>0)return;
-    projectiles.push({x:ball.x,y:ball.y,vx:0,vy:-7});
+    if(equippedSkin==='sky_storm'){
+      projectiles.push({x:ball.x,y:ball.y,vx:-2,vy:-6.5});
+      projectiles.push({x:ball.x,y:ball.y,vx:0,vy:-7});
+      projectiles.push({x:ball.x,y:ball.y,vx:2,vy:-6.5});
+    }else{
+      projectiles.push({x:ball.x,y:ball.y,vx:0,vy:-7});
+    }
     shootCooldown=.5;SFX.shoot();
     return;
   }
