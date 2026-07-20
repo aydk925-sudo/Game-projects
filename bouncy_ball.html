@@ -313,12 +313,13 @@ function lavaBg(camY){
 let state='menu';
 let camY=0,score=0,sessionCoins=0;
 let ball={},platforms=[],enemies=[],projectiles=[],enemyProjectiles=[],particles=[],coins=[];
-let keys={},shootCooldown=0;
+let keys={},shootCooldown=0,globalFreezeTimer=0;
 const BALL_R=6,GRAVITY=0.35,JUMP_VY=-8.5,SPRING_VY=-16,PLAT_H=6;
 
 function newGame(){
-  camY=0; score=0; sessionCoins=0; shootCooldown=0;
+  camY=0; score=0; sessionCoins=0; shootCooldown=0; globalFreezeTimer=0;
   ball={x:W/2,y:H-30,vx:0,vy:JUMP_VY,dead:false,invuln:0,bounceCount:0};
+  if(equippedSkin==='lava_skull') ball.invuln=3;
   platforms=[]; enemies=[]; projectiles=[]; enemyProjectiles=[]; particles=[]; coins=[];
   platforms.push({x:W/2-25,y:H-20,w:50,type:'normal',vx:0,timer:0,broken:false});
   for(let i=0;i<14;i++) genPlatform(H-50-i*32);
@@ -377,9 +378,10 @@ function updatePlay(dt){
     if(Math.random()<0.06) spawnEnemy(highestPlatY-50);
   }
   if(ball.vy>0&&!ball.dead){
+    const coralX=equippedSkin==='ocean_coral'?14:0;
     for(const p of platforms){
       if(p.broken) continue;
-      if(ball.x>=p.x&&ball.x<=p.x+p.w&&ball.y+BALL_R>=p.y&&ball.y+BALL_R<=p.y+PLAT_H+ball.vy+2){
+      if(ball.x>=p.x-coralX&&ball.x<=p.x+p.w+coralX&&ball.y+BALL_R>=p.y&&ball.y+BALL_R<=p.y+PLAT_H+ball.vy+2){
         if(p.type==='spike'){killBall();break;}
         else if(p.type==='spring'){ball.vy=SPRING_VY;SFX.spring();}
         else{
@@ -387,6 +389,7 @@ function updatePlay(dt){
           ball.bounceCount=(ball.bounceCount||0)+1;
           if(equippedSkin==='sky_cloud'&&ball.bounceCount%5===0){ball.invuln=2.5;spawnParticles(ball.x,ball.y,'#ffffff',10);}
           if(equippedSkin==='sky_rainbow'){score+=2;const rc=['#ff4488','#ffaa00','#44ffaa','#44aaff','#cc44ff'];spawnParticles(ball.x,ball.y,rc[ball.bounceCount%5],5);}
+          if(equippedSkin==='ocean_tide'&&ball.bounceCount%7===0){ball.vy=SPRING_VY;spawnParticles(ball.x,ball.y,'#00ccff',8);}
         }
         if(p.type==='breakable'){p.broken=true;p.timer=0.5;}
         break;
@@ -400,7 +403,9 @@ function updatePlay(dt){
     if(p.broken)p.timer-=dt;
   }
   platforms=platforms.filter(p=>p.y<camY+H+60&&!(p.broken&&p.timer<=0));
+  globalFreezeTimer=Math.max(0,globalFreezeTimer-dt);
   for(const e of enemies){
+    if(globalFreezeTimer>0){if(!ball.dead&&ball.invuln<=0){const dx=ball.x-e.x,dy=ball.y-e.y;const hr=e.type==='puffer'?(e.puffing?13:9):7;if(dx*dx+dy*dy<(BALL_R+hr)*(BALL_R+hr))killBall();}continue;}
     if(e.type==='slime'){
       e.x+=e.vx; if(e.x<8||e.x>W-8)e.vx*=-1;
       e.shootTimer-=dt;
@@ -410,8 +415,8 @@ function updatePlay(dt){
         enemyProjectiles.push({x:e.x,y:e.y,vx:dx/dist*2.5,vy:dy/dist*2.5});
       }
     } else if(e.type==='bat'){
-      const dx=ball.x-e.x,dy=ball.y-e.y,dist=Math.sqrt(dx*dx+dy*dy)||1;
-      e.x+=dx/dist*.5; e.y+=dy/dist*.5;
+      if(equippedSkin==='ocean_deep'){e.x+=e.vx*0.5;if(e.x<8||e.x>W-8)e.vx*=-1;}
+      else{const dx=ball.x-e.x,dy=ball.y-e.y,dist=Math.sqrt(dx*dx+dy*dy)||1;e.x+=dx/dist*.5;e.y+=dy/dist*.5;}
     } else if(e.type==='thunder'){
       e.x+=e.vx*0.3; if(e.x<8||e.x>W-8)e.vx*=-1;
       e.shootTimer-=dt;
@@ -424,8 +429,8 @@ function updatePlay(dt){
         e.vy=0; e.x+=e.vx*1.3; if(e.x<8||e.x>W-8)e.vx*=-1;
       }
     } else if(e.type==='fireimp'){
-      const dx2=ball.x-e.x,dy2=ball.y-e.y,d2=Math.sqrt(dx2*dx2+dy2*dy2)||1;
-      e.x+=dx2/d2*0.85; e.y+=dy2/d2*0.85;
+      if(equippedSkin==='ocean_deep'){e.x+=e.vx*0.5;if(e.x<8||e.x>W-8)e.vx*=-1;}
+      else{const dx2=ball.x-e.x,dy2=ball.y-e.y,d2=Math.sqrt(dx2*dx2+dy2*dy2)||1;e.x+=dx2/d2*0.85;e.y+=dy2/d2*0.85;}
     } else if(e.type==='lavablob'){
       e.phase+=0.03; e.y+=Math.sin(e.phase)*0.55;
       e.shootTimer-=dt;
@@ -467,11 +472,18 @@ function updatePlay(dt){
   enemyProjectiles=enemyProjectiles.filter(ep=>!ep.dead&&ep.x>-10&&ep.x<W+10&&ep.y>camY-50&&ep.y<camY+H+50);
   for(const pr of projectiles){
     pr.x+=pr.vx; pr.y+=pr.vy;
+    const hitR=equippedSkin==='lava_magma'?26:14;
     for(let i=enemies.length-1;i>=0;i--){
       const e=enemies[i],dx=pr.x-e.x,dy=pr.y-e.y;
-      if(dx*dx+dy*dy<(8+6)*(8+6)){
-        for(let k=0;k<e.coins;k++) coins.push({x:e.x+(Math.random()-.5)*12,y:e.y+(Math.random()-.5)*8,collected:false});
-        spawnParticles(e.x,e.y,'#ffcc00',6); enemies.splice(i,1); pr.dead=true; SFX.hit(); break;
+      if(dx*dx+dy*dy<hitR*hitR){
+        const drop=equippedSkin==='lava_gold'?e.coins*2:e.coins;
+        for(let k=0;k<drop;k++) coins.push({x:e.x+(Math.random()-.5)*12,y:e.y+(Math.random()-.5)*8,collected:false});
+        if(equippedSkin==='lava_coal') score+=5;
+        if(equippedSkin==='ocean_bubble'){globalFreezeTimer=1.5;spawnParticles(e.x,e.y,'#88eeff',8);}
+        spawnParticles(e.x,e.y,'#ffcc00',6); enemies.splice(i,1); SFX.hit();
+        pr.pierces=(pr.pierces||0)+1;
+        if(equippedSkin!=='lava_crystal'||pr.pierces>=2) pr.dead=true;
+        break;
       }
     }
   }
@@ -481,7 +493,7 @@ function updatePlay(dt){
     const dx=ball.x-cn.x,dy=ball.y-cn.y,distSq=dx*dx+dy*dy;
     if(equippedSkin==='sky_sun'&&distSq<70*70){const d=Math.sqrt(distSq)||1;cn.x+=dx/d*3.5;cn.y+=dy/d*3.5;}
     const collectR=equippedSkin==='sky_sun'?BALL_R+16:BALL_R+7;
-    if(distSq<collectR*collectR){cn.collected=true;sessionCoins++;spawnParticles(cn.x,cn.y,'#ffd700',4);SFX.coin();}
+    if(distSq<collectR*collectR){cn.collected=true;sessionCoins+=equippedSkin==='ocean_pearl'||equippedSkin==='lava_gold'?2:1;spawnParticles(cn.x,cn.y,'#ffd700',4);SFX.coin();}
   }
   coins=coins.filter(cn=>!cn.collected&&cn.y<camY+H+60);
   for(const p of particles){p.x+=p.vx;p.y+=p.vy;p.life-=dt;}
@@ -546,8 +558,8 @@ function draw(){
   ctx.fillStyle='#a8f0c8';ctx.fillText('▲'+score,4,12);
   ctx.fillStyle='#ffd700';ctx.fillText('🪙'+totalCoins,W/2-15,12);
   ctx.fillStyle='#ccc';ctx.fillText('BEST:'+bestScore,W-70,12);
-  const _skyAbilHUD={sky_cloud:'☁ SHIELD',sky_sun:'☀ MAGNET',sky_storm:'⚡ 3-SHOT',sky_rainbow:'🌈 +SCORE',sky_wind:'💨 SPEED'};
-  if(_skyAbilHUD[equippedSkin]){ctx.font='bold 7px Courier New';ctx.fillStyle='rgba(160,210,255,.8)';ctx.fillText(_skyAbilHUD[equippedSkin],4,26);}
+  const _abilHUD={sky_cloud:'☁ SHIELD',sky_sun:'☀ MAGNET',sky_storm:'⚡ 3-SHOT',sky_rainbow:'🌈 +SCORE',sky_wind:'💨 SPEED',ocean_bubble:'🫧 FREEZE',ocean_coral:'🪸 WIDE',ocean_pearl:'🪸 ×2 COIN',ocean_deep:'🌑 ABYSS',ocean_tide:'🌊 TIDE',lava_magma:'🌋 AOE',lava_crystal:'💎 PIERCE',lava_skull:'💀 INVULN',lava_coal:'🪨 +SCORE',lava_gold:'✨ ×2 DROP'};
+  if(_abilHUD[equippedSkin]){ctx.font='bold 7px Courier New';ctx.fillStyle='rgba(160,210,255,.8)';ctx.fillText(_abilHUD[equippedSkin],4,26);}
 }
 
 function drawPlatform(p,py){
