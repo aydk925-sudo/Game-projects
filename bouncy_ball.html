@@ -313,11 +313,11 @@ function lavaBg(camY){
 let state='menu';
 let camY=0,score=0,sessionCoins=0;
 let ball={},platforms=[],enemies=[],projectiles=[],enemyProjectiles=[],particles=[],coins=[];
-let keys={},shootCooldown=0,globalFreezeTimer=0;
+let keys={},shootCooldown=0,globalFreezeTimer=0,tideReady=false,tideBounces=0;
 const BALL_R=6,GRAVITY=0.35,JUMP_VY=-8.5,SPRING_VY=-16,PLAT_H=6;
 
 function newGame(){
-  camY=0; score=0; sessionCoins=0; shootCooldown=0; globalFreezeTimer=0;
+  camY=0; score=0; sessionCoins=0; shootCooldown=0; globalFreezeTimer=0; tideReady=false; tideBounces=0;
   ball={x:W/2,y:H-30,vx:0,vy:JUMP_VY,dead:false,invuln:0,bounceCount:0};
   if(equippedSkin==='lava_skull') ball.invuln=3;
   platforms=[]; enemies=[]; projectiles=[]; enemyProjectiles=[]; particles=[]; coins=[];
@@ -389,7 +389,7 @@ function updatePlay(dt){
           ball.bounceCount=(ball.bounceCount||0)+1;
           if(equippedSkin==='sky_cloud'&&ball.bounceCount%5===0){ball.invuln=2.5;spawnParticles(ball.x,ball.y,'#ffffff',10);}
           if(equippedSkin==='sky_rainbow'){score+=2;const rc=['#ff4488','#ffaa00','#44ffaa','#44aaff','#cc44ff'];spawnParticles(ball.x,ball.y,rc[ball.bounceCount%5],5);}
-          if(equippedSkin==='ocean_tide'&&ball.bounceCount%7===0){ball.vy=SPRING_VY;spawnParticles(ball.x,ball.y,'#00ccff',8);}
+          if(equippedSkin==='ocean_tide'&&!tideReady){tideBounces++;if(tideBounces>=7){tideReady=true;tideBounces=0;spawnParticles(ball.x,ball.y,'#00ccff',8);}}
         }
         if(p.type==='breakable'){p.broken=true;p.timer=0.5;}
         break;
@@ -558,8 +558,9 @@ function draw(){
   ctx.fillStyle='#a8f0c8';ctx.fillText('▲'+score,4,12);
   ctx.fillStyle='#ffd700';ctx.fillText('🪙'+totalCoins,W/2-15,12);
   ctx.fillStyle='#ccc';ctx.fillText('BEST:'+bestScore,W-70,12);
-  const _abilHUD={sky_cloud:'☁ SHIELD',sky_sun:'☀ MAGNET',sky_storm:'⚡ 3-SHOT',sky_rainbow:'🌈 +SCORE',sky_wind:'💨 SPEED',ocean_bubble:'🫧 FREEZE',ocean_coral:'🪸 WIDE',ocean_pearl:'🪸 ×2 COIN',ocean_deep:'🌑 ABYSS',ocean_tide:'🌊 TIDE',lava_magma:'🌋 AOE',lava_crystal:'💎 PIERCE',lava_skull:'💀 INVULN',lava_coal:'🪨 +SCORE',lava_gold:'✨ ×2 DROP'};
-  if(_abilHUD[equippedSkin]){ctx.font='bold 7px Courier New';ctx.fillStyle='rgba(160,210,255,.8)';ctx.fillText(_abilHUD[equippedSkin],4,26);}
+  const _abilHUD={sky_cloud:'☁ SHIELD',sky_sun:'☀ MAGNET',sky_storm:'⚡ 3-SHOT',sky_rainbow:'🌈 +SCORE',sky_wind:'💨 SPEED',ocean_bubble:'🫧 FREEZE',ocean_coral:'🪸 WIDE',ocean_pearl:'🪸 ×2 COIN',ocean_deep:'🌑 ABYSS',lava_magma:'🌋 AOE',lava_crystal:'💎 PIERCE',lava_skull:'💀 INVULN',lava_coal:'🪨 +SCORE',lava_gold:'✨ ×2 DROP'};
+  if(equippedSkin==='ocean_tide'){ctx.font='bold 7px Courier New';ctx.fillStyle=tideReady?'#00eeff':'rgba(0,180,220,.8)';ctx.fillText(tideReady?'🌊 READY! [R-CLICK]':'🌊 TIDE '+tideBounces+'/7',4,26);}
+  else if(_abilHUD[equippedSkin]){ctx.font='bold 7px Courier New';ctx.fillStyle='rgba(160,210,255,.8)';ctx.fillText(_abilHUD[equippedSkin],4,26);}
 }
 
 function drawPlatform(p,py){
@@ -670,6 +671,14 @@ wrap.addEventListener('click',e=>{
   if(state==='menu'||state==='gameover'){
     if(e.target.closest('button,.arr,#skinPreviewC,#themePreviewC,#skinLabel,#skinPrice,#themeLabel,#themePrice'))return;
     startGame(true);
+  }
+});
+
+wrap.addEventListener('contextmenu',e=>{
+  e.preventDefault();
+  if(state==='play'&&equippedSkin==='ocean_tide'&&tideReady){
+    ball.vy=SPRING_VY;tideReady=false;tideBounces=0;
+    spawnParticles(ball.x,ball.y,'#00ccff',12);spawnParticles(ball.x,ball.y,'#ffffff',6);
   }
 });
 
